@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../models/travel_item.dart';
+import 'package:intl/intl.dart';
 
 class FormScreen extends StatefulWidget {
   final TravelItem? itemToEdit;
@@ -18,9 +19,9 @@ class _FormScreenState extends State<FormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
-
   // Zmiana: Przechowujemy ścieżkę jako String, a nie obiekt File
   String? _selectedImagePath;
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _FormScreenState extends State<FormScreen> {
       _descController.text = widget.itemToEdit!.description;
       // Wczytujemy istniejącą ścieżkę
       _selectedImagePath = widget.itemToEdit!.imagePath;
+      _selectedDate = widget.itemToEdit!.date;
     }
   }
 
@@ -56,6 +58,20 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
+  Future<void> _pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
   void _showFullImage(BuildContext context, String imagePath) {
     showDialog(
       context: context,
@@ -74,6 +90,7 @@ class _FormScreenState extends State<FormScreen> {
         title: _titleController.text,
         description: _descController.text,
         imagePath: _selectedImagePath,
+        date: _selectedDate,
       );
 
       Navigator.pop(context, newItem);
@@ -106,6 +123,24 @@ class _FormScreenState extends State<FormScreen> {
                     : null,
               ),
               const SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Data podróży: ${DateFormat('dd.MM.yyyy').format(_selectedDate)}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _pickDate,
+                    icon: const Icon(Icons.calendar_today),
+                    label: const Text('Zmień datę'),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 15),
+
               TextFormField(
                 controller: _descController,
                 decoration: const InputDecoration(

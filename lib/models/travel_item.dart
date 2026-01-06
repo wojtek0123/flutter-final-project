@@ -3,11 +3,13 @@ class TravelItem {
   String title;
   String description;
   String? imagePath;
+  DateTime date;
 
   TravelItem({
     required this.id,
     required this.title,
     required this.description,
+    required this.date,
     this.imagePath,
   });
 
@@ -18,6 +20,7 @@ class TravelItem {
       'title': title,
       'description': description,
       'imagePath': imagePath,
+      'date': date.toIso8601String(),
     };
   }
 
@@ -28,6 +31,7 @@ class TravelItem {
       title: map['title'],
       description: map['description'],
       imagePath: map['imagePath'],
+      date: map['date'] != null ? DateTime.parse(map['date']) : DateTime.now(),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/travel_item.dart';
 import 'form_screen.dart';
@@ -37,8 +38,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final List<dynamic> decodedData = json.decode(encodedData);
       setState(() {
         _items = decodedData.map((item) => TravelItem.fromMap(item)).toList();
+        _sortItems();
       });
     }
+  }
+
+  void _sortItems() {
+    // Sortuj malejąco (najnowsze na górze)
+    _items.sort((a, b) => b.date.compareTo(a.date));
   }
 
   void _deleteItem(String id) {
@@ -62,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
         } else {
           _items.add(result);
         }
+        _sortItems();
       });
       _saveItems();
     }
@@ -97,7 +105,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       item.title,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(item.description),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item.description),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_month,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              DateFormat('dd.MM.yyyy').format(item.date),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _deleteItem(item.id),
