@@ -56,6 +56,17 @@ class _FormScreenState extends State<FormScreen> {
     }
   }
 
+  void _showFullImage(BuildContext context, String imagePath) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        child: kIsWeb
+            ? Image.network(imagePath, fit: BoxFit.contain)
+            : Image.file(File(imagePath), fit: BoxFit.contain),
+      ),
+    );
+  }
+
   void _saveForm() {
     if (_formKey.currentState!.validate()) {
       final newItem = TravelItem(
@@ -83,6 +94,7 @@ class _FormScreenState extends State<FormScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              // ... (Pola tekstowe tytułu i opisu bez zmian) ...
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
@@ -106,43 +118,67 @@ class _FormScreenState extends State<FormScreen> {
                     : null,
               ),
               const SizedBox(height: 20),
+
+              // --- SEKCJA ZDJĘCIA Z PODGLĄDEM ---
               Row(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
+                  // Opakowujemy Container w GestureDetector, aby wykryć kliknięcie
+                  GestureDetector(
+                    onTap: () {
+                      if (_selectedImagePath != null) {
+                        _showFullImage(context, _selectedImagePath!);
+                      }
+                    },
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: _selectedImagePath != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: kIsWeb
+                                  ? Image.network(
+                                      _selectedImagePath!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (ctx, err, stack) =>
+                                          const Icon(Icons.error),
+                                    )
+                                  : Image.file(
+                                      File(_selectedImagePath!),
+                                      fit: BoxFit.cover,
+                                    ),
+                            )
+                          : const Center(
+                              child: Icon(Icons.camera_alt, color: Colors.grey),
+                            ),
                     ),
-                    // --- TUTAJ JEST KLUCZOWA ZMIANA ---
-                    child: _selectedImagePath != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: kIsWeb
-                                // Jeśli WEB: używamy Image.network
-                                ? Image.network(
-                                    _selectedImagePath!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (ctx, err, stack) =>
-                                        const Icon(Icons.error),
-                                  )
-                                // Jeśli MOBILE: używamy Image.file
-                                : Image.file(
-                                    File(_selectedImagePath!),
-                                    fit: BoxFit.cover,
-                                  ),
-                          )
-                        : const Icon(Icons.camera_alt, color: Colors.grey),
                   ),
                   const SizedBox(width: 15),
-                  ElevatedButton.icon(
-                    onPressed: _pickImage,
-                    icon: const Icon(Icons.camera),
-                    label: const Text('Zrób zdjęcie'),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.camera),
+                        label: const Text('Zrób zdjęcie'),
+                      ),
+                      if (_selectedImagePath != null)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 5.0),
+                          child: Text(
+                            "Kliknij zdjęcie, aby powiększyć",
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
+
+              // ----------------------------------
               const SizedBox(height: 30),
               SizedBox(
                 height: 50,
